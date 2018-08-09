@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+
+      <title>DEXTER</title>
+      <link rel="stylesheet" href="css/style.css">
+
+      <script src="artyom.window.min.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  </head>
+
+  <body>
+    <div>
+      <h1>DEXTER</h1>
+      <input class="buttons"type="button" onclick="startArtyom()" value="Start Listening"/><br><br>
+      <input class="buttons gray" type="button" onclick="stopArtyom()" value="Stop Listening"/><br>
+      <span id="output" style="font-size:20px;color:red;" class="output"></span><br>
+      <span id="time" style="font-size:35px;color:#76B3FA;" class="time"></span><br>
+      <div id="commands-list" class="commands"></div>
+    <script>
+      const artyom = new Artyom(); //New artyom object created
+      //Adding commands
+      artyom.addCommands([
+        {
+          description:"Hard-coded command,responds with predetermined message when said Hello or Namaste",
+          indexes:["hello","Namaste"],
+          action:function(i){
+              // i = the index of the array of indexes option
+              if(i == 0){
+                //You say : "hello"
+                document.getElementById('time').innerHTML = "Hello! How are you doing today";
+              }
+              if(i==1){
+                document.getElementById('time').innerHTML="Namaste ! Kaise hai?";
+              }
+          }
+        },
+        { //**********This is the main command,this part has to be integrated with the middleware i.e. the AI-ML part.************
+          description:"hotword recognition command,extracts text spoken after one of the hotwords",
+          indexes:["hey dexter *","Dexter *","Computer *","hi dexter *"],
+          smart:true,// smart mode enabled
+          action:function(i,wildcard){
+            var voice_command=wildcard;
+            document.getElementById('time').innerHTML="You said: "+voice_command;
+          }
+        },
+        {
+          description:"When asked for the time this command outputs the current system time.Similarly more such commands can be added",
+          indexes:["what time is it","what is the time","what's the time","tell me the time"],
+          action:function(){
+           var currentdate = new Date();
+           var datetime = "About the date : " + currentdate.getDate() + "/"
+                + (currentdate.getMonth()+1)  + "/"
+                + currentdate.getFullYear() + " @ "
+                + currentdate.getHours() + ":"
+                + currentdate.getMinutes() + ":"
+                + currentdate.getSeconds();
+            document.getElementById('time').innerHTML = datetime;
+          }
+        }
+      ]);
+
+
+      // Redirects the recognized text dynamically on screen in real time
+      artyom.redirectRecognizedTextOutput(function(text,isFinal){
+        var span = document.getElementById('output');
+
+        if(isFinal){
+          span.innerHTML = '';
+        }
+        else {
+          span.innerHTML = text;
+        }
+      });
+
+
+      //on clicking the start listening button this function is called.
+      function startArtyom(){
+        artyom.initialize({
+          lang:"en-GB",// Support for many other languages also can be found on Artyom.js website
+          continuous:true,//to put dexter in continuos listening mode to detect one of the hotwords.
+          debug:true,
+          listen:true
+        });
+      }
+
+
+      //on clicking the stop listening button this function is called
+      function stopArtyom(){
+        artyom.fatality();
+      }
+
+      
+      //on loading the website all the available commands will be displayed.This is only to give user idea about what to say,can be removed in production
+      window.onload = function(){
+          var tab = document.getElementById("commands-list");
+          var commands =  artyom.getAvailableCommands();//shows the commands specified
+          var html = '';
+
+          for(var i = 0;i < commands.length;i++){
+              var command = commands[i];
+              html += command.description + " : <span style='color:#76B3FA;'>"+command.indexes.toString()+"</span><br>";
+          }
+
+          tab.innerHTML = html;
+      };
+    </script>
+  </body>
+
+</html>
